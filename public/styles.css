@@ -126,6 +126,13 @@ a {
   box-shadow: var(--shadow);
 }
 
+.profile-card {
+  background: var(--cream-200);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(92, 59, 46, 0.12);
+}
+
 label {
   display: block;
   font-size: 0.85rem;
@@ -165,6 +172,23 @@ button.secondary {
   margin-top: 6px;
 }
 
+.search-results {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--cream-200);
+  border-radius: 12px;
+  border: 1px solid rgba(92, 59, 46, 0.12);
+}
+
 .movie-list {
   display: grid;
   gap: 12px;
@@ -181,10 +205,25 @@ button.secondary {
   border: 1px solid rgba(92, 59, 46, 0.12);
 }
 
+.movie-item.draggable {
+  cursor: grab;
+}
+
+.movie-item.draggable:active {
+  cursor: grabbing;
+}
+
 .rank {
   font-weight: 700;
   min-width: 42px;
   color: var(--brown-900);
+}
+
+.drag-handle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brown-500);
 }
 
 .footer {

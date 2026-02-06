@@ -7,7 +7,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const { db, touchUpdatedAt, withTx } = require('./db');
-const { MAX_RANK, validateMoviePayload, validateRankPayload, validateAuthPayload } = require('./validators');
+const {
+  MAX_RANK,
+  validateMoviePayload,
+  validateRankPayload,
+  validateAuthPayload,
+  validateProfilePayload,
+} = require('./validators');
 const { searchMovies, getMovie, getGenres } = require('./tmdb');
 
 const app = express();
@@ -71,9 +77,20 @@ const setRankStmt = db.prepare(`
 
 const getUserByEmailStmt = db.prepare('SELECT * FROM users WHERE email = ?;');
 const getUserByIdStmt = db.prepare('SELECT * FROM users WHERE id = ?;');
+const updateUserStmt = db.prepare(`
+  UPDATE users SET display_name = @display_name WHERE id = @id;
+`);
 const insertUserStmt = db.prepare(`
   INSERT INTO users (email, password_hash, display_name)
   VALUES (@email, @password_hash, @display_name);
+`);
+
+const listUserMovieIdsStmt = db.prepare('SELECT id FROM movies WHERE user_id = ?;');
+const clearUserRanksStmt = db.prepare(`
+  UPDATE movies
+  SET rank = NULL,
+      updated_at = datetime('now')
+  WHERE user_id = @user_id AND rank IS NOT NULL;
 `);
 
 function signToken(user) {
@@ -170,6 +187,20 @@ app.get('/auth/me', authRequired, (req, res) => {
   res.json({ id: existing.id, email: existing.email, display_name: existing.display_name });
 });
 
+app.put('/auth/me', authRequired, (req, res) => {
+  const { errors, profile } = validateProfilePayload(req.body);
+  if (errors.length) return res.status(400).json({ errors });
+
+  const existing = getUserByIdStmt.get(req.user.id);
+  if (!existing) return res.status(404).json({ error: 'User not found' });
+
+  const nextDisplayName =
+    profile.display_name !== undefined ? profile.display_name : existing.display_name;
+  updateUserStmt.run({ id: existing.id, display_name: nextDisplayName });
+  const updated = getUserByIdStmt.get(existing.id);
+  res.json({ id: updated.id, email: updated.email, display_name: updated.display_name });
+});
+
 app.get('/movies', authRequired, (req, res) => {
   const movies = listAllStmt.all({ user_id: req.user.id });
   res.json({ count: movies.length, movies });
@@ -249,6 +280,38 @@ app.patch('/movies/:id/rank', authRequired, (req, res) => {
 
   tx();
   res.json(getByIdStmt.get(existing.id, req.user.id));
+});
+
+app.post('/movies/reorder', authRequired, (req, res) => {
+  const ordered = Array.isArray(req.body?.ordered_ids) ? req.body.ordered_ids : null;
+  if (!ordered) return res.status(400).json({ error: 'ordered_ids must be an array' });
+
+  const ids = ordered.map((id) => Number(id)).filter((id) => Number.isInteger(id));
+  const unique = new Set(ids);
+  if (ids.length !== ordered.length || unique.size !== ids.length) {
+    return res.status(400).json({ error: 'ordered_ids must be unique integers' });
+  }
+  if (ids.length > MAX_RANK) {
+    return res.status(400).json({ error: `ordered_ids cannot exceed ${MAX_RANK}` });
+  }
+
+  const userIds = new Set(listUserMovieIdsStmt.all(req.user.id).map((row) => row.id));
+  for (const id of ids) {
+    if (!userIds.has(id)) {
+      return res.status(400).json({ error: 'ordered_ids contains invalid movie id' });
+    }
+  }
+
+  const tx = withTx(() => {
+    clearUserRanksStmt.run({ user_id: req.user.id });
+    ids.forEach((id, index) => {
+      setRankStmt.run({ id, user_id: req.user.id, rank: index + 1 });
+    });
+  });
+
+  tx();
+  const movies = listRankedStmt.all({ user_id: req.user.id });
+  res.json({ count: movies.length, movies });
 });
 
 app.delete('/movies/:id', authRequired, (req, res) => {

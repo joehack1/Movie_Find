@@ -49,6 +49,7 @@ All movie endpoints require an auth token.
 - `POST /auth/register`
 - `POST /auth/login`
 - `GET /auth/me`
+- `PUT /auth/me`
 
 #### Movie fields
 
@@ -92,6 +93,24 @@ Set rank only:
 curl -X PATCH http://localhost:3000/movies/1/rank \
   -H "Content-Type: application/json" \
   -d '{"rank":5}'
+```
+
+Reorder ranked list:
+
+```bash
+curl -X POST http://localhost:3000/movies/reorder \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"ordered_ids":[3,7,2,9]}'
+```
+
+Update profile:
+
+```bash
+curl -X PUT http://localhost:3000/auth/me \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"display_name":"New Name"}'
 ```
 
 Search TMDB:

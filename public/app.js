@@ -62,11 +62,15 @@ function App() {
       });
   }, [token]);
 
-  useEffect(() => {
+  const loadMovies = () => {
     if (!token) return;
     apiFetch('/movies', { token })
       .then((data) => setMovies(data.movies || []))
       .catch((err) => setStatus(err.message));
+  };
+
+  useEffect(() => {
+    loadMovies();
   }, [token]);
 
   const ranked = useMemo(() => movies.filter((m) => m.rank).sort((a, b) => a.rank - b.rank), [movies]);
@@ -89,6 +93,56 @@ function App() {
       const data = await apiFetch('/movies', { method: 'POST', token, body: payload });
       setMovies((prev) => [data, ...prev]);
       setStatus('Movie added.');
+    } catch (err) {
+      setStatus(err.message);
+    }
+  };
+
+  const handleAddFromTmdb = async (tmdbId, rank) => {
+    setStatus('');
+    try {
+      const details = await apiFetch(`/tmdb/movie/${tmdbId}`);
+      const payload = {
+        tmdb_id: details.id,
+        title: details.title,
+        release_year: details.release_date ? Number(details.release_date.slice(0, 4)) : undefined,
+        overview: details.overview,
+        poster_path: details.poster_path,
+        rank: rank || undefined,
+      };
+      await apiFetch('/movies', { method: 'POST', token, body: payload });
+      setStatus('Movie added from TMDB.');
+      loadMovies();
+    } catch (err) {
+      setStatus(err.message);
+    }
+  };
+
+  const handleReorder = async (orderedIds) => {
+    setStatus('');
+    try {
+      await apiFetch('/movies/reorder', {
+        method: 'POST',
+        token,
+        body: { ordered_ids: orderedIds },
+      });
+      setStatus('Ranking updated.');
+      loadMovies();
+    } catch (err) {
+      setStatus(err.message);
+    }
+  };
+
+  const handleUpdateProfile = async (displayName) => {
+    setStatus('');
+    try {
+      const data = await apiFetch('/auth/me', {
+        method: 'PUT',
+        token,
+        body: { display_name: displayName },
+      });
+      setUser(data);
+      setStatus('Profile updated.');
     } catch (err) {
       setStatus(err.message);
     }
@@ -126,7 +180,7 @@ function App() {
           <h3>How it works</h3>
           <p><strong>1.</strong> Discover genres that set the mood.</p>
           <p><strong>2.</strong> Add titles and give them a rank.</p>
-          <p><strong>3.</strong> Keep refining your top 100 list.</p>
+          <p><strong>3.</strong> Drag to reorder your top 100 list.</p>
         </div>
       </section>
 
@@ -154,6 +208,9 @@ function App() {
               user={user}
               movies={ranked}
               onAddMovie={handleAddMovie}
+              onAddFromTmdb={handleAddFromTmdb}
+              onReorder={handleReorder}
+              onUpdateProfile={handleUpdateProfile}
               status={status}
             />
           )}
@@ -203,8 +260,17 @@ function AuthPanel({ onAuth, status }) {
   );
 }
 
-function UserPanel({ user, movies, onAddMovie, status }) {
+function UserPanel({ user, movies, onAddMovie, onAddFromTmdb, onReorder, onUpdateProfile, status }) {
   const [form, setForm] = useState({ title: '', release_year: '', rank: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchRank, setSearchRank] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [draggedId, setDraggedId] = useState(null);
+  const [displayName, setDisplayName] = useState(user.display_name || '');
+
+  useEffect(() => {
+    setDisplayName(user.display_name || '');
+  }, [user]);
 
   const handleSubmit = () => {
     const payload = {
@@ -216,18 +282,77 @@ function UserPanel({ user, movies, onAddMovie, status }) {
     setForm({ title: '', release_year: '', rank: '' });
   };
 
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    try {
+      const data = await apiFetch(`/tmdb/search?q=${encodeURIComponent(searchTerm)}`);
+      setSearchResults(data.results || []);
+    } catch (err) {
+      setSearchResults([]);
+    }
+  };
+
+  const handleDrop = (targetId) => {
+    if (!draggedId || draggedId === targetId) return;
+    const current = [...movies];
+    const fromIndex = current.findIndex((m) => m.id === draggedId);
+    const toIndex = current.findIndex((m) => m.id === targetId);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const [moved] = current.splice(fromIndex, 1);
+    current.splice(toIndex, 0, moved);
+    const orderedIds = current.map((m) => m.id);
+    onReorder(orderedIds);
+  };
+
   return (
     <div className="panel">
       <h3>Welcome back{user.display_name ? `, ${user.display_name}` : ''}.</h3>
       <p>Build your top 100 list.</p>
-      <label>Movie title</label>
-      <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-      <label>Release year</label>
-      <input value={form.release_year} onChange={(e) => setForm({ ...form, release_year: e.target.value })} />
-      <label>Rank (1-100)</label>
-      <input value={form.rank} onChange={(e) => setForm({ ...form, rank: e.target.value })} />
-      <button onClick={handleSubmit}>Add movie</button>
+
+      <div className="profile-card">
+        <h4>Edit profile</h4>
+        <label>Display name</label>
+        <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+        <button onClick={() => onUpdateProfile(displayName)}>Save profile</button>
+      </div>
+
+      <div style={{ marginTop: '18px' }}>
+        <h4>Search TMDB</h4>
+        <label>Search</label>
+        <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        <label>Rank (optional)</label>
+        <input value={searchRank} onChange={(e) => setSearchRank(e.target.value)} />
+        <button onClick={handleSearch}>Search</button>
+        <div className="search-results">
+          {searchResults.map((movie) => (
+            <div key={movie.id} className="search-item">
+              <div>
+                <strong>{movie.title}</strong> {movie.release_date ? `(${movie.release_date.slice(0, 4)})` : ''}
+              </div>
+              <button
+                className="secondary"
+                onClick={() => onAddFromTmdb(movie.id, searchRank ? Number(searchRank) : undefined)}
+              >
+                Add
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginTop: '18px' }}>
+        <h4>Add manually</h4>
+        <label>Movie title</label>
+        <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+        <label>Release year</label>
+        <input value={form.release_year} onChange={(e) => setForm({ ...form, release_year: e.target.value })} />
+        <label>Rank (1-100)</label>
+        <input value={form.rank} onChange={(e) => setForm({ ...form, rank: e.target.value })} />
+        <button onClick={handleSubmit}>Add movie</button>
+      </div>
+
       {status && <div className="status">{status}</div>}
+
       <div style={{ marginTop: '18px' }}>
         <h4>Your ranked list</h4>
         <div className="movie-list">
@@ -235,13 +360,19 @@ function UserPanel({ user, movies, onAddMovie, status }) {
             <div className="movie-item">No ranked movies yet.</div>
           ) : (
             movies.map((movie) => (
-              <div key={movie.id} className="movie-item">
-                <div>
-                  <div className="rank">#{movie.rank || '-'} </div>
-                </div>
+              <div
+                key={movie.id}
+                className="movie-item draggable"
+                draggable
+                onDragStart={() => setDraggedId(movie.id)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => handleDrop(movie.id)}
+              >
+                <div className="rank">#{movie.rank || '-'} </div>
                 <div style={{ flex: 1 }}>
                   <strong>{movie.title}</strong> {movie.release_year ? `(${movie.release_year})` : ''}
                 </div>
+                <div className="drag-handle">Drag</div>
               </div>
             ))
           )}
