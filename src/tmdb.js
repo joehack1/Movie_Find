@@ -40,7 +40,12 @@ async function getMovie(tmdbId) {
   return tmdbFetch(`/movie/${tmdbId}`);
 }
 
+async function getGenres() {
+  return tmdbFetch('/genre/movie/list');
+}
+
 module.exports = {
   searchMovies,
   getMovie,
+  getGenres,
 };

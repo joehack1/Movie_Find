@@ -16,7 +16,7 @@ npm install
 copy .env.example .env
 ```
 
-Set `TMDB_API_READ_TOKEN` and `TMDB_API_KEY` in `.env`.
+Set `TMDB_API_READ_TOKEN`, `TMDB_API_KEY`, and `JWT_SECRET` in `.env`.
 
 3. Run
 
@@ -24,7 +24,7 @@ Set `TMDB_API_READ_TOKEN` and `TMDB_API_KEY` in `.env`.
 npm run start
 ```
 
-API runs at `http://localhost:3000` by default.
+API runs at `http://localhost:3000` by default. The React UI is served from the same URL.
 
 ## API overview
 
@@ -42,6 +42,14 @@ API runs at `http://localhost:3000` by default.
 - `PATCH /movies/:id/rank` -> set rank
 - `DELETE /movies/:id` -> delete
 
+All movie endpoints require an auth token.
+
+### Auth
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+
 #### Movie fields
 
 - `title` (required)
@@ -57,6 +65,7 @@ Rank conflicts are resolved by shifting existing ranks down. Items pushed beyond
 
 - `GET /tmdb/search?q=interstellar&page=1`
 - `GET /tmdb/movie/:tmdbId`
+- `GET /tmdb/genres`
 
 ## Example requests
 
@@ -65,6 +74,7 @@ Create a movie:
 ```bash
 curl -X POST http://localhost:3000/movies \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
   -d '{"title":"Interstellar","release_year":2014,"rank":1}'
 ```
 
