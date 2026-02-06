@@ -125,9 +125,31 @@ function validateAuthPayload(payload, options = {}) {
   return { errors, user };
 }
 
+function validateProfilePayload(payload) {
+  const errors = [];
+  const profile = {};
+
+  if (!payload || typeof payload !== 'object') {
+    return { errors: ['Body must be a JSON object'], profile: null };
+  }
+
+  if (payload.display_name !== undefined) {
+    if (payload.display_name === null) {
+      profile.display_name = null;
+    } else if (typeof payload.display_name === 'string') {
+      profile.display_name = payload.display_name.trim();
+    } else {
+      errors.push('display_name must be a string');
+    }
+  }
+
+  return { errors, profile };
+}
+
 module.exports = {
   MAX_RANK,
   validateMoviePayload,
   validateRankPayload,
   validateAuthPayload,
+  validateProfilePayload,
 };
