@@ -40,12 +40,27 @@ async function getMovie(tmdbId) {
   return tmdbFetch(`/movie/${tmdbId}`);
 }
 
+async function getMovieVideos(tmdbId) {
+  return tmdbFetch(`/movie/${tmdbId}/videos`);
+}
+
 async function getGenres() {
   return tmdbFetch('/genre/movie/list');
+}
+
+async function discoverMoviesByGenre(genreId, page = 1) {
+  return tmdbFetch('/discover/movie', {
+    with_genres: genreId,
+    page,
+    include_adult: false,
+    sort_by: 'popularity.desc',
+  });
 }
 
 module.exports = {
   searchMovies,
   getMovie,
+  getMovieVideos,
   getGenres,
+  discoverMoviesByGenre,
 };

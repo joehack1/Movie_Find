@@ -181,13 +181,29 @@ a {
 }
 
 .genre-card {
-  background: white;
+  appearance: none;
   border: 1px solid rgba(92, 59, 46, 0.12);
+  background: white;
   border-radius: 14px;
   padding: 14px 16px;
   font-weight: 600;
   color: var(--brown-700);
   box-shadow: 0 12px 25px rgba(43, 27, 18, 0.08);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.genre-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 28px rgba(43, 27, 18, 0.12);
+}
+
+.genre-card.active {
+  background: var(--cream-200);
+  border-color: rgba(92, 59, 46, 0.4);
+  color: var(--brown-900);
 }
 
 .panel-grid {
@@ -202,6 +218,181 @@ a {
   padding: 22px;
   border: 1px solid rgba(92, 59, 46, 0.12);
   box-shadow: var(--shadow);
+}
+
+.genre-spotlight {
+  display: grid;
+  gap: 18px;
+}
+
+.genre-spotlight__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.genre-spotlight__meta {
+  display: flex;
+  gap: 10px;
+}
+
+.genre-movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.genre-movie-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(92, 59, 46, 0.12);
+  box-shadow: 0 16px 35px rgba(43, 27, 18, 0.1);
+  display: grid;
+  grid-template-rows: 160px 1fr;
+  animation: card-rise 0.6s ease both;
+  animation-delay: var(--delay, 0ms);
+}
+
+.genre-movie-card.skeleton {
+  display: grid;
+  place-items: center;
+  color: var(--brown-500);
+  background: var(--cream-200);
+}
+
+.genre-movie-banner {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.genre-movie-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.55));
+}
+
+.genre-movie-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 600;
+  z-index: 1;
+  background: linear-gradient(120deg, #816250, #2b1b12);
+}
+
+.genre-movie-body {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.genre-movie-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.genre-movie-title span {
+  font-size: 0.85rem;
+  color: var(--brown-500);
+  font-weight: 600;
+}
+
+.genre-movie-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rating-chip {
+  background: var(--cream-200);
+  color: var(--brown-700);
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.load-more {
+  align-self: flex-start;
+}
+
+.trailer-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 18, 12, 0.75);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 30;
+  animation: fade-in 0.25s ease;
+}
+
+.trailer-modal__content {
+  width: min(900px, 100%);
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+  display: grid;
+  gap: 12px;
+}
+
+.trailer-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trailer-frame {
+  position: relative;
+  padding-top: 56.25%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1a0f0a;
+}
+
+.trailer-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.trailer-link {
+  color: var(--brown-700);
+  font-weight: 600;
+}
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .profile-card {
@@ -320,5 +511,19 @@ button.secondary {
   .banner-card {
     width: 200px;
     height: 130px;
+  }
+
+  .genre-movie-card {
+    grid-template-rows: 140px 1fr;
+  }
+
+  .genre-movie-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .trailer-modal__header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

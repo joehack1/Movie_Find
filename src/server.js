@@ -14,7 +14,7 @@ const {
   validateAuthPayload,
   validateProfilePayload,
 } = require('./validators');
-const { searchMovies, getMovie, getGenres } = require('./tmdb');
+const { searchMovies, getMovie, getGenres, discoverMoviesByGenre, getMovieVideos } = require('./tmdb');
 
 const app = express();
 app.use(cors());
@@ -353,6 +353,30 @@ app.get('/tmdb/genres', async (req, res) => {
   }
 });
 
+app.get('/tmdb/genre/:genreId/movies', async (req, res) => {
+  const genreId = Number(req.params.genreId);
+  const page = Number(req.query.page || 1);
+
+  if (!Number.isInteger(genreId)) {
+    return res.status(400).json({ error: 'genreId must be an integer' });
+  }
+  if (!Number.isInteger(page) || page < 1 || page > 50) {
+    return res.status(400).json({ error: 'page must be an integer between 1 and 50' });
+  }
+
+  try {
+    const data = await discoverMoviesByGenre(genreId, page);
+    res.json({
+      page: data.page,
+      total_pages: data.total_pages,
+      total_results: data.total_results,
+      results: data.results,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message, details: err.details });
+  }
+});
+
 app.get('/tmdb/movie/:tmdbId', async (req, res) => {
   const tmdbId = Number(req.params.tmdbId);
   if (!Number.isInteger(tmdbId)) {
@@ -361,6 +385,20 @@ app.get('/tmdb/movie/:tmdbId', async (req, res) => {
 
   try {
     const data = await getMovie(tmdbId);
+    res.json(data);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message, details: err.details });
+  }
+});
+
+app.get('/tmdb/movie/:tmdbId/videos', async (req, res) => {
+  const tmdbId = Number(req.params.tmdbId);
+  if (!Number.isInteger(tmdbId)) {
+    return res.status(400).json({ error: 'tmdbId must be an integer' });
+  }
+
+  try {
+    const data = await getMovieVideos(tmdbId);
     res.json(data);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message, details: err.details });
