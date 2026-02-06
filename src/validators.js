@@ -87,8 +87,47 @@ function validateRankPayload(payload) {
   return { errors, rank };
 }
 
+function validateAuthPayload(payload, options = {}) {
+  const errors = [];
+  const user = {};
+  const { requireDisplayName = false } = options;
+
+  if (!payload || typeof payload !== 'object') {
+    return { errors: ['Body must be a JSON object'], user: null };
+  }
+
+  if (typeof payload.email === 'string') {
+    user.email = payload.email.trim().toLowerCase();
+  }
+  if (!user.email || !user.email.includes('@')) {
+    errors.push('email is required');
+  }
+
+  if (typeof payload.password === 'string') {
+    user.password = payload.password;
+  }
+  if (!user.password || user.password.length < 6) {
+    errors.push('password must be at least 6 characters');
+  }
+
+  if (payload.display_name !== undefined) {
+    if (payload.display_name === null) {
+      user.display_name = null;
+    } else if (typeof payload.display_name === 'string') {
+      user.display_name = payload.display_name.trim();
+    } else {
+      errors.push('display_name must be a string');
+    }
+  } else if (requireDisplayName) {
+    errors.push('display_name is required');
+  }
+
+  return { errors, user };
+}
+
 module.exports = {
   MAX_RANK,
   validateMoviePayload,
   validateRankPayload,
+  validateAuthPayload,
 };
