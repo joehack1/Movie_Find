@@ -41,6 +41,33 @@ function App() {
   const [genres, setGenres] = useState([]);
   const [movies, setMovies] = useState([]);
   const [status, setStatus] = useState('');
+  const bannerItems = [
+    {
+      title: 'Neon Skyline',
+      desc: 'A synthwave chase through a city that never sleeps.',
+      img: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      title: 'Dune Riders',
+      desc: 'A rebel caravan crosses a desert of whispers.',
+      img: 'https://images.unsplash.com/photo-1456926631375-92c8ce872def?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      title: 'After Midnight',
+      desc: 'Noir detectives unwind a conspiracy after dark.',
+      img: 'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      title: 'Crystal Depths',
+      desc: 'A sci-fi rescue mission beneath frozen seas.',
+      img: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      title: 'Velvet Eclipse',
+      desc: 'An art-house romance during a rare eclipse.',
+      img: 'https://images.unsplash.com/photo-1457711029163-5a2c1b4f351e?auto=format&fit=crop&w=1200&q=80',
+    },
+  ];
 
   useEffect(() => {
     apiFetch('/tmdb/genres')
@@ -176,11 +203,26 @@ function App() {
             reflects your taste. Anyone can explore the home page. Log in to unlock your personal ranking.
           </p>
         </div>
-        <div className="hero-card">
-          <h3>How it works</h3>
-          <p><strong>1.</strong> Discover genres that set the mood.</p>
-          <p><strong>2.</strong> Add titles and give them a rank.</p>
-          <p><strong>3.</strong> Drag to reorder your top 100 list.</p>
+        <div className="hero-slider" aria-label="Featured movie banners">
+          <div className="hero-slider__track">
+            {bannerItems.map((item, idx) => (
+              <div className="banner-card" key={`banner-${idx}`} style={{ backgroundImage: `url(${item.img})` }}>
+                <div className="banner-info">
+                  <h3>{item.title}</h3>
+                  <p>{item.desc}</p>
+                </div>
+              </div>
+            ))}
+            {bannerItems.map((item, idx) => (
+              <div className="banner-card" key={`banner-dup-${idx}`} style={{ backgroundImage: `url(${item.img})` }}>
+                <div className="banner-info">
+                  <h3>{item.title}</h3>
+                  <p>{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hero-slider__note">Hover a banner to reveal its story.</div>
         </div>
       </section>
 

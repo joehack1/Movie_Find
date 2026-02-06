@@ -69,16 +69,94 @@ a {
   align-items: center;
 }
 
-.hero-card {
+.hero-slider {
+  position: relative;
   background: var(--cream-100);
   border: 1px solid rgba(92, 59, 46, 0.12);
   border-radius: var(--radius);
-  padding: 28px;
+  padding: 18px 18px 46px;
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
-.hero-card strong {
-  color: var(--brown-700);
+.hero-slider__track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  animation: banner-scroll 36s linear infinite;
+}
+
+.hero-slider__track:hover {
+  animation-play-state: paused;
+}
+
+.hero-slider__note {
+  position: absolute;
+  bottom: 16px;
+  left: 20px;
+  font-size: 0.85rem;
+  color: var(--brown-500);
+}
+
+.banner-card {
+  width: 240px;
+  height: 150px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 30px rgba(43, 27, 18, 0.2);
+  border: 1px solid rgba(92, 59, 46, 0.2);
+  flex: 0 0 auto;
+}
+
+.banner-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.7) 100%);
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.banner-info {
+  position: absolute;
+  inset: auto 12px 12px 12px;
+  color: white;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.banner-info h3 {
+  color: white;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+}
+
+.banner-info p {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.banner-card:hover .banner-info {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.banner-card:hover::after {
+  opacity: 1;
+}
+
+@keyframes banner-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .pill {
@@ -237,5 +315,10 @@ button.secondary {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .banner-card {
+    width: 200px;
+    height: 130px;
   }
 }
