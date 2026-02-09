@@ -305,20 +305,23 @@ function App() {
             <div className="genre-card">Loading genres...</div>
           ) : (
             genres.map((genre) => (
-              <button
+              <a
                 key={genre.id}
-                className={`genre-card ${selectedGenre?.id === genre.id ? 'active' : ''}`}
-                onClick={() => handleGenreClick(genre)}
-                type="button"
+                className={`genre-card genre-link ${selectedGenre?.id === genre.id ? 'active' : ''}`}
+                href="#genre-spotlight"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleGenreClick(genre);
+                }}
               >
                 {genre.name}
-              </button>
+              </a>
             ))
           )}
         </div>
       </section>
 
-      <section className="section genre-spotlight" ref={spotlightRef}>
+      <section className="section genre-spotlight" id="genre-spotlight" ref={spotlightRef}>
         <div className="genre-spotlight__header">
           <div>
             <h2>{selectedGenre ? `${selectedGenre.name} picks` : 'Select a genre'}</h2>
@@ -351,7 +354,7 @@ function App() {
                 <div className="genre-movie-body">
                   <div className="genre-movie-title">
                     <h3>{movie.title}</h3>
-                    <span>{movie.release_date ? movie.release_date.slice(0, 4) : '—'}</span>
+                    <span>{movie.release_date ? movie.release_date.slice(0, 4) : '--'}</span>
                   </div>
                   <p>{movie.overview || 'No description available yet.'}</p>
                   <div className="genre-movie-actions">
@@ -421,7 +424,7 @@ function App() {
         </div>
       )}
 
-      <footer className="footer">Moviepoa ? Top 100 curator</footer>
+      <footer className="footer">Moviepoa - Top 100 curator</footer>
     </div>
   );
 }

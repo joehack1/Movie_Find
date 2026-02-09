@@ -192,7 +192,9 @@ a {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   text-align: left;
+  text-decoration: none;
   font-family: inherit;
+  display: block;
 }
 
 .genre-card:hover {
@@ -204,6 +206,11 @@ a {
   background: var(--cream-200);
   border-color: rgba(92, 59, 46, 0.4);
   color: var(--brown-900);
+}
+
+.genre-card:focus-visible {
+  outline: 2px solid var(--brown-700);
+  outline-offset: 3px;
 }
 
 .panel-grid {
